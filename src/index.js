@@ -1,6 +1,7 @@
 import express from "express";
 import { PORT } from "./config.js";
 import { config } from "dotenv";
+import userRoutes from "./routes/user.routes.js";
 import pg from "pg";
 
 config()
@@ -11,9 +12,16 @@ const pool = new pg.Pool({
     ssl: true
 })
 
+// Middlewares
+app.use(express.json());
+
+// Routes
+app.use('/users', userRoutes);
+
+// Basic routes
 app.get('/', (req, res) => {
-    res.send('Hola Mundo')
-})
+    res.send('API de Usuarios');
+});
 
 app.get('/ping', async (req, res) => {
     const result = await pool.query('SELECT NOW()')
