@@ -24,12 +24,25 @@ export const getUser = async (req, res) => {
 
 export const createUser = async (req, res) => {
     try {
-        const newUser = await userService.createUser(req.body);
-        res.status(201).json(newUser);
+      // Hash de la contraseña (usando bcrypt)
+      const hashedPassword = await bcrypt.hash(req.body.password, 10);
+      
+      const newUser = await userService.createUser({
+        ...req.body,
+        password: hashedPassword
+      });
+      
+      // No devolver la contraseña ni siquiera hasheada
+      const { password, ...userWithoutPassword } = newUser;
+      
+      res.status(201).json(userWithoutPassword);
     } catch (error) {
-        res.status(400).json({ message: error.message });
+      res.status(400).json({ 
+        type: 'DatabaseError',
+        message: error.message 
+      });
     }
-};
+  };
 
 export const updateUser = async (req, res) => {
     try {
