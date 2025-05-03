@@ -1,4 +1,5 @@
 import express from "express";
+import { PORT } from "./config.js";
 import { config } from "dotenv";
 import pg from "pg";
 
@@ -6,7 +7,8 @@ config()
 
 const app = express()
 const pool = new pg.Pool({
-    connectionString: process.env.DATABASE_URL
+    connectionString: process.env.DATABASE_URL,
+    ssl: true
 })
 
 app.get('/', (req, res) => {
@@ -18,5 +20,5 @@ app.get('/ping', async (req, res) => {
     return res.json(result.rows[0])
 })
 
-app.listen(3000)
-console.log('Server on port', 3000)
+app.listen(PORT)
+console.log('Server on port', PORT)
