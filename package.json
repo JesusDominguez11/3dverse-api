@@ -17,6 +17,7 @@
     "express": "^5.1.0",
     "express-validator": "^7.2.1",
     "pg": "^8.15.6",
+    "psql": "^0.0.1",
     "render": "^0.1.4"
   }
 }
