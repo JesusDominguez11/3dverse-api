@@ -2,6 +2,7 @@ import express from "express";
 import { PORT } from "./config.js";
 import { config } from "dotenv";
 import userRoutes from "./routes/user.routes.js";
+import productRoutes from "./routes/product.routes.js";
 import pg from "pg";
 
 config()
@@ -17,10 +18,11 @@ app.use(express.json());
 
 // Routes
 app.use('/users', userRoutes);
+app.use("/products", productRoutes);
 
 // Basic routes
 app.get('/', (req, res) => {
-    res.send('API de Usuarios');
+    res.send('API de 3Dverse');
 });
 
 app.get('/ping', async (req, res) => {
