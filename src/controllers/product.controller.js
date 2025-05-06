@@ -5,20 +5,25 @@ export const getProducts = async (req, res) => {
         const products = await productService.getProducts();
         res.status(200).json(products);
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        res.status(500).json({ 
+            message: "Error al obtener productos",
+            error: error.message 
+        });
     }
 };
 
 export const getProduct = async (req, res) => {
     try {
         const product = await productService.getProductById(req.params.id);
-        if (product) {
-            res.status(200).json(product);
-        } else {
-            res.status(404).json({ message: "Product not found" });
+        if (!product) {
+            return res.status(404).json({ message: "Producto no encontrado" });
         }
+        res.status(200).json(product);
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        res.status(500).json({ 
+            message: "Error al obtener el producto",
+            error: error.message 
+        });
     }
 };
 

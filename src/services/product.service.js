@@ -17,6 +17,16 @@ export const getProductById = async (id) => {
 
 export const createProduct = async (productData) => {
     const { name, price, images, description, category, size } = productData;
+
+        // Validación adicional a nivel de servicio
+        if (productData.price <= 0) {
+            throw new Error("El precio debe ser mayor que cero");
+        }
+    
+        if (productData.images.length === 0) {
+            throw new Error("Debe proporcionar al menos una imagen");
+        }
+
     const { rows } = await pool.query(
         `INSERT INTO products 
          (name, price, images, description, category, size) 
