@@ -56,29 +56,3 @@ export const deleteUser = async (req, res) => {
     }
 };
 
-export const loginUser = async (req, res) => {
-  try {
-      const { usernameOrEmail, password } = req.body;
-      
-      // Autenticar usuario
-      const user = await userService.authenticateUser(usernameOrEmail, password);
-      
-      // Generar token
-      const token = userService.generateAuthToken(user.id);
-      
-      res.json({
-          user,
-          token
-      });
-      
-  } catch (error) {
-      console.error('Login error:', error);
-      
-      // Manejo específico de errores
-      const statusCode = error.statusCode || 500;
-      const type = error.type || 'ServerError';
-      const message = error.message || 'Error en el servidor';
-      
-      res.status(statusCode).json({ type, message });
-  }
-};
