@@ -13,6 +13,7 @@ import {
   import { requestLogger, errorLogger } from './middlewares/logger.js';
   import { errorHandler, notFoundHandler } from './middlewares/errorHandler.js';
   import { validateContentType, validateAcceptHeader } from './middlewares/contentValidation.js';
+  import { timeoutMiddleware } from "./middlewares/timeout.js";
 
 config()
 
@@ -34,6 +35,9 @@ app.use(requestLogger);
 // Middlewares de validación de contenido
 app.use(validateContentType);
 app.use(validateAcceptHeader);
+
+// Middlewares de timeout
+app.use(timeoutMiddleware(5000)); // 5 segundos
 
 // Parseo del body
 app.use(express.json());
