@@ -56,3 +56,121 @@ export const deleteUser = async (req, res) => {
     }
 };
 
+export const loginUser = async (req, res) => {
+    // Paso 1: Validación básica de entrada
+    const { usernameOrEmail, password } = req.body;
+    
+    if (!usernameOrEmail || !password) {
+        return res.status(400).json({
+            type: 'ValidationError',
+            message: 'Usuario/email y contraseña son requeridos'
+        });
+    }
+
+    try {
+        // Paso 2: Buscar usuario en la base de datos
+        const user = await findUserByCredentials(usernameOrEmail);
+        
+        // Paso 3: Verificar contraseña
+        await verifyPassword(password, user.password);
+        
+        // Paso 4: Generar token JWT
+        const token = generateAuthToken(user.id);
+        
+        // Paso 5: Preparar respuesta
+        const response = prepareUserResponse(user, token);
+        
+        res.json(response);
+
+        const decoded = jwt.decode(token);
+        console.log('Middleware auth - Token recibido:', token);
+        console.log('Usuario autenticado:', {
+        id: decoded.userId,
+        timestamp: new Date(decoded.iat * 1000),
+        expira: new Date(decoded.exp * 1000)
+        });
+        
+    } catch (error) {
+        handleLoginError(error, res);
+    }
+};
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// Buscar usuario en la base de datos
+const findUserByCredentials = async (usernameOrEmail) => {
+    const { rows } = await pool.query(
+        `SELECT id, username, email, password FROM users 
+         WHERE username = $1 OR email = $1`,
+        [usernameOrEmail]
+    );
+    
+    if (rows.length === 0) {
+        throw { 
+            statusCode: 401,
+            type: 'AuthError',
+            message: 'Credenciales inválidas' 
+        };
+    }
+    
+    return rows[0];
+};
+
+// Verificar contraseña
+const verifyPassword = async (inputPassword, hashedPassword) => {
+    const isMatch = await bcrypt.compare(inputPassword, hashedPassword);
+    if (!isMatch) {
+        throw {
+            statusCode: 401,
+            type: 'AuthError',
+            message: 'Credenciales inválidas'
+        };
+    }
+};
+
+// Generar token JWT
+const generateAuthToken = (userId) => {
+    if (!process.env.JWT_SECRET) {
+        throw new Error('JWT_SECRET no está configurado');
+    }
+    
+    return jwt.sign(
+        { userId }, // Payload
+        process.env.JWT_SECRET, // Secreto
+        { expiresIn: process.env.JWT_EXPIRES_IN || '1h' } // Expiración
+    );
+};
+
+// Preparar respuesta al usuario
+const prepareUserResponse = (user, token) => {
+    const { password, ...userWithoutPassword } = user;
+    return {
+        user: userWithoutPassword,
+        token
+    };
+};
+
+// Manejo de errores
+const handleLoginError = (error, res) => {
+    console.error('Error en login:', error);
+    
+    const statusCode = error.statusCode || 500;
+    const type = error.type || 'ServerError';
+    const message = error.message || 'Error en el servidor';
+    
+    res.status(statusCode).json({ type, message });
+};
