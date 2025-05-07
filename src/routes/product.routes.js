@@ -13,6 +13,7 @@ import {
     validateProductId,
     validateCategory
 } from "../validators/product.validator.js";
+import { authenticate, authorize } from "../middlewares/auth.js";
 
 const router = Router();
 

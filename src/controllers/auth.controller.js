@@ -44,12 +44,88 @@ export const loginUser = async (req, res) => {
 };
 
 export const registerUser = async (req, res) => {
-    return await "En curso";
-}
+    const { username, email, password, name } = req.body;
+    
+    // Validación básica
+    if (!username || !email || !password || !name) {
+        return res.status(400).json({
+            type: 'ValidationError',
+            message: 'Todos los campos son requeridos'
+        });
+    }
+
+    try {
+        // Verificar si el usuario ya existe
+        const existingUser = await pool.query(
+            'SELECT 1 FROM users WHERE username = $1 OR email = $2',
+            [username, email]
+        );
+        
+        if (existingUser.rows.length > 0) {
+            return res.status(409).json({
+                type: 'ValidationError',
+                message: 'El usuario o email ya existe'
+            });
+        }
+
+        // Hash de la contraseña
+        const hashedPassword = await bcrypt.hash(password, 12);
+        
+        // Crear usuario
+        const { rows } = await pool.query(
+            `INSERT INTO users (username, email, password, name, role)
+             VALUES ($1, $2, $3, $4, $5)
+             RETURNING id, username, email, name, role`,
+            [username, email, hashedPassword, name, 'user'] // Rol por defecto: 'user'
+        );
+
+        // Generar token automáticamente después del registro
+        const token = generateAuthToken(rows[0].id);
+        
+        res.status(201).json({
+            user: rows[0],
+            token
+        });
+        
+    } catch (error) {
+        console.error('Error en registro:', error);
+        res.status(500).json({
+            type: 'ServerError',
+            message: 'Error al registrar usuario'
+        });
+    }
+};
+
 
 export const logoutUser = async (req, res) => {
-    return await "En curso";
-}
+    try {
+        // El middleware authenticate ya adjuntó el token a req.token
+        if (!req.token) {
+            return res.status(400).json({
+                type: 'AuthError',
+                message: 'No hay sesión activa'
+            });
+        }
+
+        // Agregar token a la lista negra (necesitarás importar tokenBlacklist)
+        tokenBlacklist.add(req.token);
+        
+        // Opcional: Eliminar token del cliente
+        res.setHeader('Clear-Site-Data', '"cookies", "storage"');
+        
+        res.json({
+            success: true,
+            message: 'Sesión cerrada exitosamente'
+        });
+        
+    } catch (error) {
+        console.error('Error en logout:', error);
+        res.status(500).json({
+            type: 'ServerError',
+            message: 'Error al cerrar sesión'
+        });
+    }
+};
 
 
 // Buscar usuario en la base de datos
