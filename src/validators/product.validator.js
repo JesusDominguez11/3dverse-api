@@ -70,3 +70,5 @@ export function handleValidationErrors(req, res, next) {
   }
   next();
 }
+
+export const validateRelatedProducts = validateProductId;

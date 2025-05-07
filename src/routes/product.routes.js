@@ -5,13 +5,15 @@ import {
     createProduct,
     updateProduct,
     deleteProduct,
-    getProductsByCategory
+    getProductsByCategory,
+    getRelatedProducts
 } from "../controllers/product.controller.js";
 import {
     validateCreateProduct,
     validateUpdateProduct,
     validateProductId,
-    validateCategory
+    validateCategory,
+    validateRelatedProducts
 } from "../validators/product.validator.js";
 import { authenticate, authorize } from "../middlewares/auth.js";
 
@@ -23,5 +25,6 @@ router.post("/", authenticate, authorize(['admin']), validateCreateProduct, crea
 router.put("/:id", authenticate, authorize(['admin']), validateProductId, validateUpdateProduct, updateProduct);
 router.delete("/:id", authenticate, authorize(['admin']), validateProductId, deleteProduct);
 router.get("/category/:category", validateCategory, getProductsByCategory);
+router.get("/related/:id", validateRelatedProducts, getRelatedProducts);
 
 export default router;

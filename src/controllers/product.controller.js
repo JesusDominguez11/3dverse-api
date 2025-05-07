@@ -67,3 +67,19 @@ export const getProductsByCategory = async (req, res) => {
         res.status(500).json({ message: error.message });
     }
 };
+
+// Añade este nuevo método al final del archivo
+export const getRelatedProducts = async (req, res) => {
+    try {
+        const relatedProducts = await productService.getRelatedProducts(req.params.id);
+        res.status(200).json(relatedProducts);
+    } catch (error) {
+        if (error.message === 'Producto no encontrado') {
+            return res.status(404).json({ message: error.message });
+        }
+        res.status(500).json({ 
+            message: "Error al obtener productos relacionados",
+            error: error.message 
+        });
+    }
+};

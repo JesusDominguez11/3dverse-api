@@ -67,3 +67,23 @@ export const getProductsByCategory = async (category) => {
     );
     return rows;
 };
+
+// Añade este nuevo método al final del archivo
+export const getRelatedProducts = async (productId) => {
+    // 1. Primero obtenemos el producto actual para saber su categoría
+    const currentProduct = await getProductById(productId);
+    if (!currentProduct) {
+        throw new Error('Producto no encontrado');
+    }
+
+    // 2. Buscamos productos de la misma categoría (excluyendo el actual)
+    const { rows } = await pool.query(
+        `SELECT id, name, price, images, description, category, size 
+         FROM products 
+         WHERE category = $1 AND id != $2
+         LIMIT 4`,
+        [currentProduct.category, productId]
+    );
+
+    return rows;
+};
