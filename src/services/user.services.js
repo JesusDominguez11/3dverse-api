@@ -80,11 +80,11 @@ export const deleteUser = async (id) => {
     await pool.query("DELETE FROM users WHERE id = $1", [id]);
 };
 
-export const findUserByUsernameOrEmail = async (usernameOrEmail) => {
-    const { rows } = await pool.query(
-      `SELECT id, username, email, password FROM users 
-       WHERE username = $1 OR email = $1`,
-      [usernameOrEmail]
-    );
-    return rows[0];
-  };
+// export const findUserByUsernameOrEmail = async (usernameOrEmail) => {
+//     const { rows } = await pool.query(
+//       `SELECT id, username, email, password FROM users 
+//        WHERE username = $1 OR email = $1`,
+//       [usernameOrEmail]
+//     );
+//     return rows[0];
+//   };

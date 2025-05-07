@@ -1,6 +1,8 @@
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 
+const isProduction = process.env.NODE_ENV === 'production';
+
 // Configuración de seguridad básica
 export const securityHeaders = helmet();
 
@@ -10,7 +12,26 @@ export const apiLimiter = rateLimit({
   max: 100, // límite de 100 peticiones por IP
   standardHeaders: true,
   legacyHeaders: false,
-  message: 'Demasiadas peticiones desde esta IP, por favor intenta nuevamente más tarde'
+  message: {
+    type: 'RateLimitError',
+    message: 'Demasiadas peticiones desde esta IP'
+  }
+});
+
+// Limiter específico para autenticación (más restrictivo)
+export const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutos
+  max: 20, // Solo 20 intentos de login por IP
+  standardHeaders: true,
+  skipSuccessfulRequests: true, // No contar peticiones exitosas
+  handler: (req, res) => {
+    res.status(429).json({
+      type: 'RateLimitError',
+      message: isProduction
+        ? 'Demasiados intentos de login. Intenta nuevamente más tarde'
+        :'Límite de desarrollo excedido'
+    });
+  }
 });
 
 // Middleware para prevenir MIME type sniffing

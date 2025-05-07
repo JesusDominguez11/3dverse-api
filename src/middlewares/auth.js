@@ -34,9 +34,7 @@ export const authenticate = async (req, res, next) => {
       throw new Error('JWT_SECRET no está configurado');
     }
 
-    console.log(process.env.JWT_SECRET);
     console.log(token);
-    console.log(jwt.decoded)
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     
     // 5. Verificar usuario en base de datos

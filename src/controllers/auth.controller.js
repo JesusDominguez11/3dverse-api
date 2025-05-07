@@ -1,0 +1,144 @@
+import bcrypt from "bcryptjs";
+import { pool } from '../config.js';
+import jwt from 'jsonwebtoken';
+
+export const loginUser = async (req, res) => {
+
+    // Verificar si está bajo rate limiting
+    if (req.rateLimit.remaining <= 3) {
+        console.warn(`Login con pocos intentos restantes para IP ${req.ip}`);
+    }
+
+    // Validación básica de entrada
+    const { usernameOrEmail, password } = req.body;
+    
+    if (!usernameOrEmail || !password) {
+        return res.status(400).json({
+            type: 'ValidationError',
+            message: 'Usuario/email y contraseña son requeridos'
+        });
+    }
+
+    try {
+        console.log(`Intento de login para: ${usernameOrEmail}`);
+
+        // Buscar usuario en la base de datos
+        const user = await findUserByCredentials(usernameOrEmail);
+        
+        // Verificar contraseña
+        await verifyPassword(password, user.password);
+        
+        // Generar token JWT
+        const token = generateAuthToken(user.id);
+
+        logTokenDetails(token);  // función para logging
+        
+        // Preparar respuesta
+        const response = prepareUserResponse(user, token);
+        
+        res.json(response);
+        
+    } catch (error) {
+        handleLoginError(error, res);
+    }
+};
+
+export const registerUser = async (req, res) => {
+    return await "En curso";
+}
+
+export const logoutUser = async (req, res) => {
+    return await "En curso";
+}
+
+
+// Buscar usuario en la base de datos
+const findUserByCredentials = async (usernameOrEmail) => {
+    const { rows } = await pool.query(
+        `SELECT id, username, email, password, role FROM users 
+         WHERE username = $1 OR email = $1`,
+        [usernameOrEmail]
+    );
+    
+    if (rows.length === 0) {
+        throw { 
+            statusCode: 401,
+            type: 'AuthError',
+            message: 'Credenciales inválidas' 
+        };
+    }
+    
+    return rows[0];
+};
+
+// Verificar contraseña
+const verifyPassword = async (inputPassword, hashedPassword) => {
+    const isMatch = await bcrypt.compare(inputPassword, hashedPassword);
+    if (!isMatch) {
+        throw {
+            statusCode: 401,
+            type: 'AuthError',
+            message: 'Credenciales inválidas'
+        };
+    }
+};
+
+// Generar token JWT
+const generateAuthToken = (userId) => {
+    if (!process.env.JWT_SECRET || process.env.JWT_SECRET.length < 32) {
+        throw {
+          statusCode: 500,
+          type: 'ConfigError',
+          message: 'Configuración de seguridad inválida'
+        };
+      }
+    
+    return jwt.sign(
+        { userId }, // Payload
+        process.env.JWT_SECRET, // Secreto
+        { 
+            expiresIn: process.env.JWT_EXPIRES_IN || '1h',
+            algorithm: 'HS256'
+        } // Expiración
+    );
+};
+
+// Preparar respuesta al usuario
+const prepareUserResponse = (user, token) => {
+    const { password, ...userWithoutPassword } = user;
+    return {
+        user: userWithoutPassword,
+        token
+    };
+};
+
+// Manejo de errores
+const handleLoginError = (error, res) => {
+    const errorMap = {
+      'JsonWebTokenError': { status: 401, type: 'AuthError' },
+      'TokenExpiredError': { status: 401, type: 'AuthError' },
+      'ConfigError': { status: 500, type: 'ServerError' }
+    };
+    
+    const errorInfo = errorMap[error.name] || { 
+      status: error.statusCode || 500, 
+      type: error.type || 'ServerError' 
+    };
+    
+    res.status(errorInfo.status).json({
+      type: errorInfo.type,
+      message: error.message || 'Error en el servidor'
+    });
+  };
+
+
+  // Nueva función para logging detallado
+const logTokenDetails = (token) => {
+    const decoded = jwt.decode(token);
+    console.log('Token generado:', {
+      userId: decoded.userId,
+      issuedAt: new Date(decoded.iat * 1000).toISOString(),
+      expiresAt: new Date(decoded.exp * 1000).toISOString(),
+      duration: `${decoded.exp - decoded.iat} segundos`
+    });
+  };
