@@ -18,9 +18,9 @@ const router = Router();
 
 router.get("/", getProducts);
 router.get("/:id", validateProductId, getProduct);
-router.post("/", validateCreateProduct, createProduct);
-router.put("/:id", validateProductId, validateUpdateProduct, updateProduct);
-router.delete("/:id", validateProductId, deleteProduct);
+router.post("/", authenticate, authorize(['admin']), validateCreateProduct, createProduct);
+router.put("/:id", authenticate, authorize(['admin']), validateProductId, validateUpdateProduct, updateProduct);
+router.delete("/:id", authenticate, authorize(['admin']), validateProductId, deleteProduct);
 router.get("/category/:category", validateCategory, getProductsByCategory);
 
 export default router;
