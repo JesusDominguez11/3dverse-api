@@ -15,6 +15,7 @@ import {
   import { errorHandler, notFoundHandler } from './middlewares/errorHandler.js';
   import { validateContentType, validateAcceptHeader } from './middlewares/contentValidation.js';
   import { timeoutMiddleware } from "./middlewares/timeout.js";
+import cors from "cors";
 
 config()
 
@@ -23,6 +24,12 @@ const pool = new pg.Pool({
     connectionString: process.env.DATABASE_URL,
     ssl: true
 })
+
+// O permitir solo tu dominio de Angular (mejor opción)
+app.use(cors({
+  origin: 'http://localhost:4200',
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+}));
 
 // Middlewares de seguridad
 app.use(securityHeaders);
