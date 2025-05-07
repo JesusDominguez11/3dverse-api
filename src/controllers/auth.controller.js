@@ -35,7 +35,7 @@ export const loginUser = async (req, res) => {
         
         // Preparar respuesta
         const response = prepareUserResponse(user, token);
-        
+        console.log(token);
         res.json(response);
         
     } catch (error) {
