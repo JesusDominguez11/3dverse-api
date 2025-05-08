@@ -28,7 +28,7 @@ const pool = new pg.Pool({
 
 // O permitir solo tu dominio de Angular (mejor opción)
 app.use(cors({
-  origin: 'http://localhost:4200',
+  origin: 'https://threedprinting-store.onrender.com',
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
 }));
 
